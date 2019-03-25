@@ -1,0 +1,19 @@
+:host {
+  display: inline-flex;
+  max-width: 100%;
+}
+
+:host *,
+:host *:before,
+:host *:after {
+  box-sizing: border-box;
+}
+
+:host ::slotted(author-options) {
+  height: 0;
+  overflow: hidden;
+}
+
+:host([open]) ::slotted(author-options) {
+  height: auto;
+}

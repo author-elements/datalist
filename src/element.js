@@ -1,321 +1,186 @@
-class AuthorDatalistElement extends AuthorElement(HTMLElement) {
+class AuthorDatalistElement extends AuthorMenuElement {
   constructor () {
     super(`{{TEMPLATE-STRING}}`)
 
-    this.clickCount = 0
+    this.UTIL.defineProperties({
+      clickCount: {
+        private: true,
+        default: 0
+      }
+    })
 
-    this.PRIVATE.addReadOnlyProperty('options')
+    this.UTIL.defineAttributes({
+      'case-sensitive': false
+    })
 
-    this.PRIVATE.options = []
-
-    this.PRIVATE.find = query => {
-      return this.PRIVATE.options.filter(option => {
-        let value = this.hasAttribute('case-sensitive') ? option.sourceElement.value : option.sourceElement.value.toLowerCase()
-        let text = this.hasAttribute('case-sensitive') ? option.sourceElement.text : option.sourceElement.text.toLowerCase()
+    this.UTIL.definePrivateMethods({
+      find: query => (Array.from(this.options).filter(option => {
+        let value = this.hasAttribute('case-sensitive') ? option.value : option.value.toLowerCase()
+        let text = this.hasAttribute('case-sensitive') ? option.text : option.text.toLowerCase()
         query = this.hasAttribute('case-sensitive') ? query : query.toLowerCase()
 
         return value.indexOf(query) >= 0 || text.indexOf(query) >= 0
-      })
-    }
+      })),
 
-    this.PRIVATE.clear = () => {
-      this.PRIVATE.options.forEach(option => option.displayElement.style.display = 'none')
-    }
+      hideAllOptions: () => Array.from(this.options).forEach(option => option.setAttribute('hidden', '')),
 
-    this.PRIVATE.showAllOptions = () => {
-      this.PRIVATE.options.forEach(option => option.displayElement.style.display = '')
-    }
+      inputFocusHandler: evt => {
+        this.inputElement.addEventListener('keydown', this.PRIVATE.inputKeydownHandler)
+      },
 
-    this.PRIVATE.clickHandler = evt => {
-      this.clickCount++
-
-      if (this.clickCount === 2) {
-        this.PRIVATE.showAllOptions()
-        this.open()
-      }
-    }
-
-    this.PRIVATE.keydownHandler = evt => {
-      if (!this.isOpen) {
-        this.PRIVATE.showAllOptions()
-        return this.open()
-      }
-
-      switch (evt[this.keySource]) {
-        case 27:
-        case 'Escape':
-          this.PRIVATE.clear()
-          this.close()
-          break
-
-        case 38:
-        case 'ArrowUp':
-          evt.preventDefault()
-          console.log('select previous option');
-          break
-
-        case 40:
-        case 'ArrowDown':
-          evt.preventDefault()
-          console.log('select next option');
-          break
-
-        default:
+      inputKeydownHandler: evt => {
+        if (!this.open) {
+          this.PRIVATE.showAllOptions()
+          this.open = true
           return
-      }
-    }
-
-    this.PRIVATE.inputHandler = evt => {
-      this.PRIVATE.clear()
-      let query = this.PRIVATE.inputEl.value
-
-      if (!query) {
-        return
-      }
-
-      let results = this.PRIVATE.find(query)
-
-      if (results.length) {
-        results.forEach(result => result.displayElement.style.display = '')
-        this.setAttribute('open', '')
-        return
-      }
-
-      if (this.hasAttribute('open')) {
-        this.removeAttribute('open')
-      }
-
-      this.PRIVATE.clear()
-    }
-
-    this.PRIVATE.bodyClickHandler = evt => {
-      if (evt.target === this || this.contains(evt.target)) {
-        return
-      }
-
-      this.removeAttribute('open')
-    }
-
-    this.PRIVATE.getOptionById = (id) => {
-      let options = this.PRIVATE.options
-      let option
-
-      for (let i = 0; i < options.length; i++) {
-        if (options[i].id === id) {
-          option = options[i]
-          break
         }
-      }
 
-      return option
-    }
+        this.PRIVATE.keydownHandler(evt)
+      },
 
-    this.PRIVATE.generateOptionObject = optionEl => {
-      if (!customElements.get('chassis-option')) {
-        console.error(`chassis-datalist requires chassis-option. Please include it in this document's <head> element.`)
-        return
-      }
+      showAllOptions: () => Array.from(this.options).forEach(option => option.removeAttribute('hidden'))
+    })
 
-      let obj = {
-        id: this.PRIVATE.generateGuid('option'),
-        attributes: {},
-        sourceElement: optionEl
-      }
+    this.UTIL.registerListeners(this, {
+      connected: () => {
+        this.inputElement.addEventListener('focus', this.PRIVATE.inputFocusHandler)
 
-      for (let attr of optionEl.attributes) {
-        obj.attributes[attr.name] = attr.value
-      }
+        this.UTIL.registerListeners(this.inputElement, {
+          blur: evt => {
+            this.PRIVATE.clickCount = 0
+            this.inputElement.removeEventListener('keydown', this.PRIVATE.inputKeydownHandler)
+          },
 
-      return obj
-    }
+          click: evt => {
+            this.PRIVATE.clickCount++
+
+            if (this.PRIVATE.clickCount === 2) {
+              this.PRIVATE.showAllOptions()
+              this.open = true
+            }
+          },
+
+          input: evt => {
+            this.PRIVATE.hideAllOptions()
+            let query = this.inputElement.value
+
+            if (!query) {
+              return
+            }
+
+            let results = this.PRIVATE.find(query)
+
+            if (results.length) {
+              results.forEach(result => result.removeAttribute('hidden'))
+              this.open = true
+              return
+            }
+
+            if (this.open) {
+              this.open = false
+            }
+
+            this.PRIVATE.hideAllOptions()
+          }
+        })
+      },
+
+      disconnected: () => {
+        this.inputElement.removeEventListener('focus', this.PRIVATE.inputFocusHandler)
+      },
+
+      'options.selected': evt => this.inputElement.value = evt.detail.options[0].value
+    })
   }
 
   static get observedAttributes () {
-    return ['autofocus', 'case-sensitive', 'disabled', 'name', 'open', 'tabindex']
-  }
-
-  get isOpen () {
-    return this.hasAttribute('open')
-  }
-
-  set isOpen (bool) {
-    bool ? this.setAttribute('open', '') : this.removeAttribute('open')
+    return [...AuthorMenuElement.observedAttributes, 'case-sensitive']
   }
 
   get value () {
-    return this.PRIVATE.inputEl.value
+    return this.inputElement.value
   }
 
-  connectedCallback () {
-    this.PRIVATE.inputEl.addEventListener('focus', evt => {
-      this.addEventListener('keydown', this.PRIVATE.keydownHandler)
-    })
-
-    this.PRIVATE.inputEl.addEventListener('input', this.PRIVATE.inputHandler)
-
-    this.PRIVATE.inputEl.addEventListener('click', this.PRIVATE.clickHandler)
-
-    this.PRIVATE.inputEl.addEventListener('blur', evt => {
-      this.clickCount = 0
-      this.removeEventListener('keydown', this.PRIVATE.keydownHandler)
-    })
-
-    setTimeout(() => {
-      if (!this.hasAttribute('tabindex')) {
-        this.setAttribute('tabindex', 0)
-      }
-
-      if (this.autofocus) {
-        this.focus()
-      }
-    }, 0)
-  }
-
-  addChildren (children) {
-    for (let child of children) {
-      this.addOption(child instanceof HTMLElement ? this.PRIVATE.generateOptionObject(child) : child)
-    }
-  }
-
-  addOption (option, index, dest = this.PRIVATE.optionsEl) {
-    if (!customElements.get('chassis-option')) {
-      console.error(`chassis-datalist requires chassis-option. Please include it in this document's <head> element.`)
-      return
-    }
-
-    if (!option.hasOwnProperty('id')) {
-      option.id = this.PRIVATE.generateGuid('option')
-    }
-
-    if (!option.hasOwnProperty('sourceElement') || !(option.sourceElement instanceof HTMLElement)) {
-      let sourceEl = document.createElement('option')
-
-      if (option.hasOwnProperty('innerHTML')) {
-        sourceEl.innerHTML = option.innerHTML
-      }
-
-      if (option.hasOwnProperty('label')) {
-        sourceEl.innerHTML = option.label
-      }
-
-      if (option.hasOwnProperty('value')) {
-        sourceEl.value = option.value
-      }
-
-      if (option.hasOwnProperty('disabled')) {
-        sourceEl.disabled = typeof option.disabled === 'boolean' && option.disabled
-      }
-
-      option.sourceElement = sourceEl
-    }
-
-    let label = option.sourceElement.getAttribute('label') || option.sourceElement.textContent.trim()
-    let value = option.sourceElement.getAttribute('value')
-    let disabled = option.sourceElement.disabled
-    let chassisOption = document.createElement('chassis-option')
-
-    chassisOption.style.display = 'none'
-    chassisOption.key = option.id
-    chassisOption.innerHTML = option.sourceElement.innerHTML
-
-    dest.appendChild(chassisOption)
-    chassisOption.addEventListener('click', evt => this.select(chassisOption.key))
-
-    option = {
-      attributes: { disabled, label, value },
-      id: option.id,
-      displayElement: chassisOption,
-      sourceElement: option.sourceElement
-    }
-
-    if (index) {
-      this[`${index}`] = option.sourceElement
-      this.PRIVATE.options.splice(index, 0, option)
-      return
-    }
-
-    this[`${this.PRIVATE.options.length}`] = option.sourceElement
-    this.PRIVATE.options.push(option)
-  }
-
-  attributeChangedCallback (attr, oldValue, newValue) {
-    attr = attr.toLowerCase()
-
-    if (newValue === oldValue) {
-      return
-    }
-
-    switch (attr) {
-      case 'autofocus':
-      case 'disabled':
-        console.log(attr);
-        // this.PRIVATE.setBooleanAttributeValue(attr, newValue)
-        break
-
-      case 'name':
-        console.log(attr);
-        // this.PRIVATE.setAttributeValue(attr, newValue)
-        break
-
-      case 'open':
-        this.isOpen ? this.open() : this.close()
-        break
-    }
-  }
-
-  close () {
-    document.body.removeEventListener('click', this.PRIVATE.bodyClickHandler)
-    document.body.removeEventListener('touchcancel', this.PRIVATE.bodyClickHandler)
-    document.body.removeEventListener('touchend', this.PRIVATE.bodyClickHandler)
-
-    if (this.isOpen) {
-      this.isOpen = false
-    }
-  }
-
-  open () {
-    document.body.addEventListener('click', this.PRIVATE.bodyClickHandler)
-    document.body.addEventListener('touchcancel', this.PRIVATE.bodyClickHandler)
-    document.body.addEventListener('touchend', this.PRIVATE.bodyClickHandler)
-
-    if (!this.isOpen) {
-      this.isOpen = true
-    }
+  add (option, index) {
+    this.optionsElement.addOption(option, index)
+    // if (!customElements.get('author-option')) {
+    //   return console.error(`author-datalist requires author-option. Please include it in this document's <head> element.`)
+    // }
+    //
+    // if (!option.hasOwnProperty('id')) {
+    //   option.id = this.PRIVATE.generateGuid('option')
+    // }
+    //
+    // if (!option.hasOwnProperty('sourceElement') || !(option.sourceElement instanceof HTMLElement)) {
+    //   let sourceEl = document.createElement('option')
+    //
+    //   if (option.hasOwnProperty('innerHTML')) {
+    //     sourceEl.innerHTML = option.innerHTML
+    //   }
+    //
+    //   if (option.hasOwnProperty('label')) {
+    //     sourceEl.innerHTML = option.label
+    //   }
+    //
+    //   if (option.hasOwnProperty('value')) {
+    //     sourceEl.value = option.value
+    //   }
+    //
+    //   if (option.hasOwnProperty('disabled')) {
+    //     sourceEl.disabled = typeof option.disabled === 'boolean' && option.disabled
+    //   }
+    //
+    //   option.sourceElement = sourceEl
+    // }
+    //
+    // let label = option.sourceElement.getAttribute('label') || option.sourceElement.textContent.trim()
+    // let value = option.sourceElement.getAttribute('value')
+    // let disabled = option.sourceElement.disabled
+    // let authorOption = document.createElement('author-option')
+    //
+    // authorOption.style.display = 'none'
+    // authorOption.key = option.id
+    // authorOption.innerHTML = option.sourceElement.innerHTML
+    //
+    // dest.appendChild(authorOption)
+    // authorOption.addEventListener('click', evt => this.select(authorOption.key))
+    //
+    // option = {
+    //   attributes: { disabled, label, value },
+    //   id: option.id,
+    //   displayElement: authorOption,
+    //   sourceElement: option.sourceElement
+    // }
+    //
+    // if (index) {
+    //   this[`${index}`] = option.sourceElement
+    //   this.options.splice(index, 0, option)
+    //   return
+    // }
+    //
+    // this[`${this.options.length}`] = option.sourceElement
+    // this.options.push(option)
   }
 
   inject (input, datalist, guid) {
-    this.PRIVATE.sourceEl = datalist
-    this.PRIVATE.inputEl = input
-    this.PRIVATE.inputEl.slot = 'input'
-    this.PRIVATE.inputEl.id = guid
-    this.appendChild(this.PRIVATE.inputEl)
-
-    this.PRIVATE.optionsEl = document.createElement('chassis-options')
-    this.PRIVATE.optionsEl.slot = 'options'
-
-    this.appendChild(this.PRIVATE.optionsEl)
-
-    this.addChildren(datalist.options)
-  }
-
-  select (id) {
-    let option = this.PRIVATE.getOptionById(id)
-
-    if (option) {
-      option.sourceElement.selected = true
-      this.PRIVATE.inputEl.value = option.displayElement.innerHTML
-      this.PRIVATE.selectedOption = option
-
-      this.PRIVATE.options.forEach(option => option.displayElement.removeAttribute('selected'))
-      option.displayElement.setAttribute('selected', '')
-
-      this.dispatchEvent(new Event('input', {
-        bubbles: true
-      }))
-
-      this.close()
+    // Prevent re-injections
+    if (this.PRIVATE.injected) {
+      return
     }
+
+    input.slot = 'input'
+    input.id = guid
+
+    this.UTIL.defineProperty('inputElement', {
+      readonly: true,
+      default: input
+    })
+
+    this.appendChild(this.inputElement)
+    super.inject(datalist)
   }
 }
 
-customElements.define('chassis-datalist', AuthorDatalistElement)
+customElements.define('author-datalist', AuthorDatalistElement)
+
+export default AuthorDatalistElement

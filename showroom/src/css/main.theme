@@ -18,13 +18,6 @@ custom-properties {
 }
 
 components {
-	author-layout-cell {
-		@state initial {
-			background: var(--grey-n00);
-			box-shadow: 0 0 0 2px black;
-		}
-	}
-
 	anchor {
 		@state initial {
 			color: var(--blue);
@@ -241,8 +234,11 @@ components {
       vertical-align: middle;
       outline: none;
       cursor: pointer;
-			box-shadow: inset 0 -2px 0 0 var(--grey-n04);
 			transition: all ease-in-out .1s;
+
+			& input {
+				margin: 0;
+			}
 
 			& author-options {
 				position: absolute;
@@ -265,7 +261,7 @@ components {
 		@state open {
 			box-shadow: inset 0 -2px 0 0 var(--blue);
 
-			& author-options {
+			author-options {
 				height: auto;
 			}
 		}

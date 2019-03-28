@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-datalist v1.0.2 available at github.com/author-elements/datalist
-// Last Build: 3/27/2019, 10:07:09 PM
+// @author.io/element-datalist v1.0.3 available at github.com/author-elements/datalist
+// Last Build: 3/27/2019, 10:15:47 PM
 var AuthorDatalistElement = (function () {
   'use strict';
 
@@ -266,6 +266,12 @@ var AuthorDatalistElement = (function () {
       key: "add",
       value: function add(option, index) {
         this.optionsElement.addOption(option, index);
+      }
+    }, {
+      key: "clear",
+      value: function clear() {
+        this.inputElement.value = '';
+        this.PRIVATE.showAllOptions();
       }
     }, {
       key: "inject",

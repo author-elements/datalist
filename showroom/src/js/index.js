@@ -7,8 +7,6 @@ const Demo = new NGNX.VIEW.Registry({
   },
 
   init () {
-    this.ref.datalist.element.input.on('option.selected', detail => {
-      console.log(detail);
-    })
+    window.datalist = this.ref.datalist.element.input
   }
 })

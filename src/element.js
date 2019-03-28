@@ -109,6 +109,11 @@ class AuthorDatalistElement extends AuthorMenuElement {
     this.optionsElement.addOption(option, index)
   }
 
+  clear () {
+    this.inputElement.value = ''
+    this.PRIVATE.showAllOptions()
+  }
+
   inject (input, select, guid) {
     // Prevent re-injections
     if (this.PRIVATE.injected) {

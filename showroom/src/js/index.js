@@ -8,5 +8,7 @@ const Demo = new NGNX.VIEW.Registry({
 
   init () {
     window.datalist = this.ref.datalist.element.input
+
+    datalist.focus()
   }
 })

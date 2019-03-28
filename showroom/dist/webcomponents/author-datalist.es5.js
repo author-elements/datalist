@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-datalist v1.0.1 available at github.com/author-elements/datalist
-// Last Build: 3/27/2019, 6:30:16 PM
+// @author.io/element-datalist v1.0.2 available at github.com/author-elements/datalist
+// Last Build: 3/27/2019, 10:07:09 PM
 var AuthorDatalistElement = (function () {
   'use strict';
 
@@ -250,9 +250,12 @@ var AuthorDatalistElement = (function () {
           });
         },
         'options.selected': function optionsSelected(evt) {
-          _this.inputElement.value = evt.detail.options[0].value;
+          var option = evt.detail.options[0];
+          _this.inputElement.value = option.value;
 
           _this.PRIVATE.filterInput();
+
+          _this.emit('option.selected', option.displayElement);
         }
       });
 
@@ -262,63 +265,7 @@ var AuthorDatalistElement = (function () {
     _createClass(AuthorDatalistElement, [{
       key: "add",
       value: function add(option, index) {
-        this.optionsElement.addOption(option, index); // if (!customElements.get('author-option')) {
-        //   return console.error(`author-datalist requires author-option. Please include it in this document's <head> element.`)
-        // }
-        //
-        // if (!option.hasOwnProperty('id')) {
-        //   option.id = this.PRIVATE.generateGuid('option')
-        // }
-        //
-        // if (!option.hasOwnProperty('sourceElement') || !(option.sourceElement instanceof HTMLElement)) {
-        //   let sourceEl = document.createElement('option')
-        //
-        //   if (option.hasOwnProperty('innerHTML')) {
-        //     sourceEl.innerHTML = option.innerHTML
-        //   }
-        //
-        //   if (option.hasOwnProperty('label')) {
-        //     sourceEl.innerHTML = option.label
-        //   }
-        //
-        //   if (option.hasOwnProperty('value')) {
-        //     sourceEl.value = option.value
-        //   }
-        //
-        //   if (option.hasOwnProperty('disabled')) {
-        //     sourceEl.disabled = typeof option.disabled === 'boolean' && option.disabled
-        //   }
-        //
-        //   option.sourceElement = sourceEl
-        // }
-        //
-        // let label = option.sourceElement.getAttribute('label') || option.sourceElement.textContent.trim()
-        // let value = option.sourceElement.getAttribute('value')
-        // let disabled = option.sourceElement.disabled
-        // let authorOption = document.createElement('author-option')
-        //
-        // authorOption.style.display = 'none'
-        // authorOption.key = option.id
-        // authorOption.innerHTML = option.sourceElement.innerHTML
-        //
-        // dest.appendChild(authorOption)
-        // authorOption.addEventListener('click', evt => this.select(authorOption.key))
-        //
-        // option = {
-        //   attributes: { disabled, label, value },
-        //   id: option.id,
-        //   displayElement: authorOption,
-        //   sourceElement: option.sourceElement
-        // }
-        //
-        // if (index) {
-        //   this[`${index}`] = option.sourceElement
-        //   this.options.splice(index, 0, option)
-        //   return
-        // }
-        //
-        // this[`${this.options.length}`] = option.sourceElement
-        // this.options.push(option)
+        this.optionsElement.addOption(option, index);
       }
     }, {
       key: "inject",

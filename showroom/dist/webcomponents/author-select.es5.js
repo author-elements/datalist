@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-select v1.0.11 available at github.com/author-elements/select
-// Last Build: 3/27/2019, 7:33:33 AM
+// @author.io/element-select v1.0.12 available at github.com/author-elements/select
+// Last Build: 3/28/2019, 2:29:20 AM
 var AuthorSelectElement = (function () {
   'use strict';
 
@@ -228,7 +228,11 @@ var AuthorSelectElement = (function () {
           this.appendChild(selectedOptionsElement);
 
           if (!this.multiple) {
-            this.selectedOptionsElement.add(this.optionsElement.options[this.selectedIndex]);
+            var selectedOption = this.optionsElement.options[this.selectedIndex];
+
+            if (selectedOption) {
+              this.selectedOptionsElement.add(selectedOption);
+            }
           }
         }
       }

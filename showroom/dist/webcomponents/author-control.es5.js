@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-control v1.0.10 available at github.com/author-elements/control
-// Last Build: 3/28/2019, 12:28:57 AM
+// @author.io/element-control v1.0.11 available at github.com/author-elements/control
+// Last Build: 3/28/2019, 4:40:09 AM
 var AuthorFormControlElement = (function () {
   'use strict';
 
@@ -223,7 +223,7 @@ var AuthorFormControlElement = (function () {
                 return this$1.PRIVATE.initInput(node)
               }
 
-              var adjacentElement = collection[index + 1].addedNodes.item(0);
+              var adjacentElement = collection[index + 1];
 
               if (!adjacentElement || adjacentElement.nodeName !== 'DATALIST') {
                 return this$1.PRIVATE.initInput(node)
@@ -266,7 +266,7 @@ var AuthorFormControlElement = (function () {
             return
           }
 
-          this$1.PRIVATE.transformChild(node, index, array);
+          this$1.PRIVATE.transformChild(node, index, array.map(function (mutation) { return mutation.addedNodes.item(0); }));
         });
 
         observer.disconnect();

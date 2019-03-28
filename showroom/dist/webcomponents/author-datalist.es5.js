@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-datalist v1.0.0 available at github.com/author-elements/datalist
-// Last Build: 3/27/2019, 12:34:32 AM
+// @author.io/element-datalist v1.0.1 available at github.com/author-elements/datalist
+// Last Build: 3/27/2019, 6:30:16 PM
 var AuthorDatalistElement = (function () {
   'use strict';
 
@@ -155,22 +155,11 @@ var AuthorDatalistElement = (function () {
 
       _this = _possibleConstructorReturn(this, _getPrototypeOf(AuthorDatalistElement).call(this, "<template><style>@charset \"UTF-8\"; :host{display:inline-flex;max-width:100%}:host *,:host :after,:host :before{box-sizing:border-box}:host ::slotted(author-options){height:0;overflow:hidden}:host([open]) ::slotted(author-options){height:auto}author-datalist{display:inline-flex;max-width:100%}author-datalist *,author-datalist :after,author-datalist :before{box-sizing:border-box}author-datalist author-options{height:0;overflow:hidden}author-datalist[open] author-options{height:auto}</style><slot name=\"afterbegin\"></slot><slot name=\"beforeinput\"></slot><slot name=\"input\"></slot><slot name=\"afterinput\"></slot><slot name=\"beforeselectedoptions\"></slot><slot name=\"selectedoptions\"></slot><slot name=\"afterselectedoptions\"></slot><slot name=\"beforeoptions\"></slot><slot name=\"options\"></slot><slot name=\"afteroptions\"></slot><slot name=\"beforeend\"></slot></template>"));
 
-      _this.UTIL.defineProperties({
-        clickCount: {
-          private: true,
-          default: 0
-        }
+      _this.UTIL.defineAttributes({
+        'case-sensitive': false
       });
 
       _this.UTIL.definePrivateMethods({
-        find: function find(query) {
-          return Array.from(_this.options).filter(function (option) {
-            var value = _this.hasAttribute('case-sensitive') ? option.value : option.value.toLowerCase();
-            var text = _this.hasAttribute('case-sensitive') ? option.text : option.text.toLowerCase();
-            query = _this.hasAttribute('case-sensitive') ? query : query.toLowerCase();
-            return value.indexOf(query) >= 0 || text.indexOf(query) >= 0;
-          });
-        },
         hideAllOptions: function hideAllOptions() {
           return Array.from(_this.options).forEach(function (option) {
             return option.setAttribute('hidden', '');
@@ -179,12 +168,63 @@ var AuthorDatalistElement = (function () {
         inputFocusHandler: function inputFocusHandler(evt) {
           _this.inputElement.addEventListener('keydown', _this.PRIVATE.inputKeydownHandler);
         },
-        inputKeydownHandler: function inputKeydownHandler(evt) {
-          if (!_this.open) {
+        clearFilter: function clearFilter() {
+          if (_this.optionsElement.hasFilter('query')) {
+            _this.optionsElement.removeFilter('query');
+
+            _this.selectedIndex = -1;
+          }
+        },
+        filterInput: function filterInput() {
+          _this.PRIVATE.clearFilter();
+
+          var query = _this.inputElement.value;
+
+          if (!query || query === '') {
             _this.PRIVATE.showAllOptions();
 
-            _this.open = true;
-            return;
+            return _this.PRIVATE.clearFilter();
+          }
+
+          _this.optionsElement.addFilter('query', function () {
+            var results = _this.optionsElement.find(query, _this['case-sensitive']);
+
+            if (results.length) {
+              return results;
+            }
+
+            return _this.options;
+          });
+
+          _this.PRIVATE.hideAllOptions();
+
+          _this.optionsElement.filteredOptions.forEach(function (option) {
+            return option.hidden = false;
+          });
+        },
+        inputKeydownHandler: function inputKeydownHandler(evt) {
+          switch (evt[_this.keySource]) {
+            case 13:
+            case 'Enter':
+            case 27:
+            case 'Escape':
+            case 38:
+            case 'ArrowUp':
+            case 40:
+            case 'ArrowDown':
+              break;
+
+            case 32:
+            case ' ':
+              return;
+
+            case 8:
+            case 'Backspace':
+              if (_this.inputElement.value.length === 1) {
+                _this.open = false;
+              }
+
+              break;
           }
 
           _this.PRIVATE.keydownHandler(evt);
@@ -198,55 +238,21 @@ var AuthorDatalistElement = (function () {
 
       _this.UTIL.registerListeners(_assertThisInitialized(_this), {
         connected: function connected() {
-          _this.inputElement.addEventListener('focus', _this.PRIVATE.inputFocusHandler);
-
           _this.UTIL.registerListeners(_this.inputElement, {
+            focus: _this.PRIVATE.inputFocusHandler,
             blur: function blur(evt) {
-              _this.PRIVATE.clickCount = 0;
-
               _this.inputElement.removeEventListener('keydown', _this.PRIVATE.inputKeydownHandler);
             },
             click: function click(evt) {
-              _this.PRIVATE.clickCount++;
-
-              if (_this.PRIVATE.clickCount === 2) {
-                _this.PRIVATE.showAllOptions();
-
-                _this.open = true;
-              }
+              return _this.open = true;
             },
-            input: function input(evt) {
-              _this.PRIVATE.hideAllOptions();
-
-              var query = _this.inputElement.value;
-
-              if (!query) {
-                return;
-              }
-
-              var results = _this.PRIVATE.find(query);
-
-              if (results.length) {
-                results.forEach(function (result) {
-                  return result.removeAttribute('hidden');
-                });
-                _this.open = true;
-                return;
-              }
-
-              if (_this.open) {
-                _this.open = false;
-              }
-
-              _this.PRIVATE.hideAllOptions();
-            }
+            input: _this.PRIVATE.filterInput
           });
         },
-        disconnected: function disconnected() {
-          _this.inputElement.removeEventListener('focus', _this.PRIVATE.inputFocusHandler);
-        },
         'options.selected': function optionsSelected(evt) {
-          return _this.inputElement.value = evt.detail.options[0].value;
+          _this.inputElement.value = evt.detail.options[0].value;
+
+          _this.PRIVATE.filterInput();
         }
       });
 
@@ -316,7 +322,7 @@ var AuthorDatalistElement = (function () {
       }
     }, {
       key: "inject",
-      value: function inject(input, datalist, guid) {
+      value: function inject(input, select, guid) {
         // Prevent re-injections
         if (this.PRIVATE.injected) {
           return;
@@ -330,7 +336,7 @@ var AuthorDatalistElement = (function () {
         });
         this.appendChild(this.inputElement);
 
-        _get(_getPrototypeOf(AuthorDatalistElement.prototype), "inject", this).call(this, datalist);
+        _get(_getPrototypeOf(AuthorDatalistElement.prototype), "inject", this).call(this, select);
       }
     }, {
       key: "value",

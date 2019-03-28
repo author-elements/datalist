@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-control v1.0.8 available at github.com/author-elements/control
-// Last Build: 3/14/2019, 12:34:36 AM
+// @author.io/element-control v1.0.10 available at github.com/author-elements/control
+// Last Build: 3/28/2019, 12:28:57 AM
 var AuthorFormControlElement = (function () {
   'use strict';
 
@@ -79,7 +79,6 @@ var AuthorFormControlElement = (function () {
           this$1.type = 'select';
 
           if (!customElements.get('author-datalist')) {
-            console.dir(input);
             input.id = this$1.PRIVATE.guid;
             datalist.id = (input.id) + "_datalist";
             input.setAttribute('list', datalist.id);
@@ -115,7 +114,13 @@ var AuthorFormControlElement = (function () {
           this$1.removeChild(datalist);
           this$1.removeChild(input);
 
-          surrogate.inject(input, datalist, this$1.PRIVATE.guid);
+          // Use a select as sourceElement to preserve option indexes, since
+          // datalist doesn't assign indexes to child options
+          var select = document.createElement('select');
+          Array.from(datalist.children).forEach(function (option) { return select.add(option); });
+          select.selectedIndex = -1;
+
+          surrogate.inject(input, select, this$1.PRIVATE.guid);
           this$1.appendChild(surrogate);
           this$1.PRIVATE.input = surrogate;
         },

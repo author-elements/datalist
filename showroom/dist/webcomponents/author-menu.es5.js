@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-menu v1.0.4 available at github.com/author-elements/menu
-// Last Build: 3/27/2019, 6:56:19 AM
+// @author.io/element-menu v1.0.7 available at github.com/author-elements/menu
+// Last Build: 3/28/2019, 1:29:32 AM
 var AuthorMenuElement = (function () {
   'use strict';
 
@@ -235,9 +235,8 @@ var AuthorMenuElement = (function () {
           switch (evt[_this.keySource]) {
             case 27:
             case 'Escape':
-              _this.PRIVATE.clear();
-
-              return _this.close();
+              _this.open = false;
+              return;
 
             case 13:
             case 'Enter':
@@ -289,8 +288,10 @@ var AuthorMenuElement = (function () {
                 startIndex: startIndex
               }, _this.optionsElement);
 
-            default:
-              return;
+            case 9:
+            case 'Tab':
+              _this.open = false;
+              break;
           }
         },
         optionSelectionHandler: function optionSelectionHandler(evt) {

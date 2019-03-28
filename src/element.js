@@ -2,37 +2,69 @@ class AuthorDatalistElement extends AuthorMenuElement {
   constructor () {
     super(`{{TEMPLATE-STRING}}`)
 
-    this.UTIL.defineProperties({
-      clickCount: {
-        private: true,
-        default: 0
-      }
-    })
-
     this.UTIL.defineAttributes({
       'case-sensitive': false
     })
 
     this.UTIL.definePrivateMethods({
-      find: query => (Array.from(this.options).filter(option => {
-        let value = this.hasAttribute('case-sensitive') ? option.value : option.value.toLowerCase()
-        let text = this.hasAttribute('case-sensitive') ? option.text : option.text.toLowerCase()
-        query = this.hasAttribute('case-sensitive') ? query : query.toLowerCase()
-
-        return value.indexOf(query) >= 0 || text.indexOf(query) >= 0
-      })),
-
       hideAllOptions: () => Array.from(this.options).forEach(option => option.setAttribute('hidden', '')),
 
       inputFocusHandler: evt => {
         this.inputElement.addEventListener('keydown', this.PRIVATE.inputKeydownHandler)
       },
 
-      inputKeydownHandler: evt => {
-        if (!this.open) {
+      clearFilter: () => {
+        if (this.optionsElement.hasFilter('query')) {
+          this.optionsElement.removeFilter('query')
+          this.selectedIndex = -1
+        }
+      },
+
+      filterInput: () => {
+        this.PRIVATE.clearFilter()
+
+        let query = this.inputElement.value
+
+        if (!query || query === '') {
           this.PRIVATE.showAllOptions()
-          this.open = true
-          return
+          return this.PRIVATE.clearFilter()
+        }
+
+        this.optionsElement.addFilter('query', () => {
+          let results = this.optionsElement.find(query, this['case-sensitive'])
+
+          if (results.length) {
+            return results
+          }
+
+          return this.options
+        })
+
+        this.PRIVATE.hideAllOptions()
+        this.optionsElement.filteredOptions.forEach(option => option.hidden = false)
+      },
+
+      inputKeydownHandler: evt => {
+        switch (evt[this.keySource]) {
+          case 13:
+          case 'Enter':
+          case 27:
+          case 'Escape':
+          case 38:
+          case 'ArrowUp':
+          case 40:
+          case 'ArrowDown': break
+
+          case 32:
+          case ' ': return
+
+          case 8:
+          case 'Backspace':
+            if (this.inputElement.value.length === 1) {
+              this.open = false
+            }
+
+            break
         }
 
         this.PRIVATE.keydownHandler(evt)
@@ -43,53 +75,23 @@ class AuthorDatalistElement extends AuthorMenuElement {
 
     this.UTIL.registerListeners(this, {
       connected: () => {
-        this.inputElement.addEventListener('focus', this.PRIVATE.inputFocusHandler)
-
         this.UTIL.registerListeners(this.inputElement, {
+          focus: this.PRIVATE.inputFocusHandler,
+
           blur: evt => {
-            this.PRIVATE.clickCount = 0
             this.inputElement.removeEventListener('keydown', this.PRIVATE.inputKeydownHandler)
           },
 
-          click: evt => {
-            this.PRIVATE.clickCount++
+          click: evt => this.open = true,
 
-            if (this.PRIVATE.clickCount === 2) {
-              this.PRIVATE.showAllOptions()
-              this.open = true
-            }
-          },
-
-          input: evt => {
-            this.PRIVATE.hideAllOptions()
-            let query = this.inputElement.value
-
-            if (!query) {
-              return
-            }
-
-            let results = this.PRIVATE.find(query)
-
-            if (results.length) {
-              results.forEach(result => result.removeAttribute('hidden'))
-              this.open = true
-              return
-            }
-
-            if (this.open) {
-              this.open = false
-            }
-
-            this.PRIVATE.hideAllOptions()
-          }
+          input: this.PRIVATE.filterInput
         })
       },
 
-      disconnected: () => {
-        this.inputElement.removeEventListener('focus', this.PRIVATE.inputFocusHandler)
-      },
-
-      'options.selected': evt => this.inputElement.value = evt.detail.options[0].value
+      'options.selected': evt => {
+        this.inputElement.value = evt.detail.options[0].value
+        this.PRIVATE.filterInput()
+      }
     })
   }
 
@@ -162,7 +164,7 @@ class AuthorDatalistElement extends AuthorMenuElement {
     // this.options.push(option)
   }
 
-  inject (input, datalist, guid) {
+  inject (input, select, guid) {
     // Prevent re-injections
     if (this.PRIVATE.injected) {
       return
@@ -177,7 +179,7 @@ class AuthorDatalistElement extends AuthorMenuElement {
     })
 
     this.appendChild(this.inputElement)
-    super.inject(datalist)
+    super.inject(select)
   }
 }
 

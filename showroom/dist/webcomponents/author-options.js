@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-options v1.0.5-beta.7 available at github.com/author-elements/options
-// Last Build: 3/27/2019, 6:25:07 AM
+// @author.io/element-options v1.0.17 available at github.com/author-elements/options
+// Last Build: 3/28/2019, 1:18:11 AM
 var AuthorOptionsElement = (function () {
   'use strict';
 
@@ -15,6 +15,24 @@ var AuthorOptionsElement = (function () {
       this.UTIL.defineProperties({
         cherryPickedOptions: {
           private: true
+        },
+
+        filteredOptions: {
+          readonly: true,
+          get: () => {
+            let { options } = this;
+
+            for (let filter in this.PRIVATE.filters) {
+              options = this.PRIVATE.filters[filter]();
+            }
+
+            return Array.isArray(options) ? options : []
+          }
+        },
+
+        filters: {
+          private: true,
+          default: {}
         },
 
         form: {
@@ -138,7 +156,7 @@ var AuthorOptionsElement = (function () {
                 return
 
               default:
-                return this.hoverOption(startIndex + 1)
+                return this.PRIVATE.hoverNextOption(startIndex)
             }
 
             return
@@ -169,7 +187,7 @@ var AuthorOptionsElement = (function () {
                 return
 
               default:
-                return this.hoverOption(startIndex - 1)
+                return this.PRIVATE.hoverPreviousOption(startIndex)
             }
 
             return
@@ -290,8 +308,7 @@ var AuthorOptionsElement = (function () {
                   label: sourceElement.getAttribute('label') || sourceElement.textContent.trim(),
                   selected: sourceElement.selected,
                   value: sourceElement.hasAttribute('value') ? sourceElement.getAttribute('value').trim() : null,
-                  text: sourceElement.text.trim(),
-                  hidden: sourceElement.hidden
+                  text: sourceElement.text.trim()
                 },
 
                 setAttr: (name, value) => {
@@ -317,11 +334,11 @@ var AuthorOptionsElement = (function () {
             }
 
             get hidden () {
-              return _p.get(this).attributes.hidden
+              return this.displayElement.hidden
             }
 
             set hidden (bool) {
-              _p.get(this).setAttr('hidden', bool);
+              this.displayElement.hidden = bool;
             }
 
             get index () {
@@ -376,6 +393,36 @@ var AuthorOptionsElement = (function () {
         },
 
         getCurrentSelection: () => this.options.filter(option => option.selected),
+
+        getPreviousVisibleOption: startIndex => {
+          let index = startIndex - 1;
+          let option = this.options[index];
+
+          if (!option) {
+            return null
+          }
+
+          if (option.hidden) {
+            option = this.PRIVATE.getPreviousVisibleOption(index);
+          }
+
+          return option
+        },
+
+        getNextVisibleOption: startIndex => {
+          let index = startIndex + 1;
+          let option = this.options[index];
+
+          if (!option) {
+            return null
+          }
+
+          if (option.hidden) {
+            option = this.PRIVATE.getNextVisibleOption(index);
+          }
+
+          return option
+        },
 
         handleClickSelection: (detail, cb) => {
           let {
@@ -447,6 +494,26 @@ var AuthorOptionsElement = (function () {
 
             return cb(selection)
           }
+        },
+
+        hoverPreviousOption: (startIndex) => {
+          let option = this.PRIVATE.getPreviousVisibleOption(startIndex);
+
+          if (!option || option.index === startIndex) {
+            return
+          }
+
+          this.hoverOption(option.index);
+        },
+
+        hoverNextOption: (startIndex) => {
+          let option = this.PRIVATE.getNextVisibleOption(startIndex);
+
+          if (!option || option.index === startIndex) {
+            return
+          }
+
+          this.hoverOption(option.index);
         },
 
         optionSelectionHandler: evt => {
@@ -578,6 +645,37 @@ var AuthorOptionsElement = (function () {
       });
     }
 
+    addFilter (key = this.UTIL.generateGuid('filter_'), func) {
+      if (typeof func !== 'function') {
+        this.UTIL.throwError({
+          type: 'type',
+          message: `Filter must be a function`
+        });
+      }
+
+      if (this.PRIVATE.filters.hasOwnProperty(key)) {
+        console.warn(`Filter "${key}" alredy exists! Overwriting...`);
+      }
+
+      this.PRIVATE.filters[key] = func;
+    }
+
+    hasFilter (filter) {
+      return this.PRIVATE.filters.hasOwnProperty(filter)
+    }
+
+    removeFilter (key) {
+      if (!this.PRIVATE.filters.hasOwnProperty(key)) {
+        return console.warn(`Filter "${key}" not found.`)
+      }
+
+      delete this.PRIVATE.filters[key];
+    }
+
+    removeAllFilters () {
+      this.PRIVATE.filters = {};
+    }
+
     addOptgroup (optgroup) {
       let label = document.createElement('author-optgroup-label');
       label.innerHTML = optgroup.getAttribute('label');
@@ -669,6 +767,18 @@ var AuthorOptionsElement = (function () {
       this.options.filter(option => option.selected).forEach((option, index, options) => {
         this.deselect(option, index = options.length - 1 && showPlaceholder);
       });
+    }
+
+    find (query, caseSensitive = false) {
+      let results = Array.from(this.options).filter(option => {
+        let value = caseSensitive ? option.value : option.value.toLowerCase();
+        let text = caseSensitive ? option.text : option.text.toLowerCase();
+        query = caseSensitive ? query : query.toLowerCase();
+
+        return value.indexOf(query) >= 0 || text.indexOf(query) >= 0
+      });
+
+      return Array.isArray(results) ? results : []
     }
 
     hoverOption (index) {

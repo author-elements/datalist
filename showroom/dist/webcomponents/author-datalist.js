@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-datalist v1.0.0 available at github.com/author-elements/datalist
-// Last Build: 3/27/2019, 12:34:32 AM
+// @author.io/element-datalist v1.0.1 available at github.com/author-elements/datalist
+// Last Build: 3/27/2019, 6:30:16 PM
 var AuthorDatalistElement = (function () {
   'use strict';
 
@@ -19,33 +19,69 @@ var AuthorDatalistElement = (function () {
     constructor () {
       super(`<template><style>@charset "UTF-8"; :host{display:inline-flex;max-width:100%}:host *,:host :after,:host :before{box-sizing:border-box}:host ::slotted(author-options){height:0;overflow:hidden}:host([open]) ::slotted(author-options){height:auto}author-datalist{display:inline-flex;max-width:100%}author-datalist *,author-datalist :after,author-datalist :before{box-sizing:border-box}author-datalist author-options{height:0;overflow:hidden}author-datalist[open] author-options{height:auto}</style><slot name="afterbegin"></slot><slot name="beforeinput"></slot><slot name="input"></slot><slot name="afterinput"></slot><slot name="beforeselectedoptions"></slot><slot name="selectedoptions"></slot><slot name="afterselectedoptions"></slot><slot name="beforeoptions"></slot><slot name="options"></slot><slot name="afteroptions"></slot><slot name="beforeend"></slot></template>`);
 
-      this.UTIL.defineProperties({
-        clickCount: {
-          private: true,
-          default: 0
-        }
+      this.UTIL.defineAttributes({
+        'case-sensitive': false
       });
 
       this.UTIL.definePrivateMethods({
-        find: query => (Array.from(this.options).filter(option => {
-          let value = this.hasAttribute('case-sensitive') ? option.value : option.value.toLowerCase();
-          let text = this.hasAttribute('case-sensitive') ? option.text : option.text.toLowerCase();
-          query = this.hasAttribute('case-sensitive') ? query : query.toLowerCase();
-
-          return value.indexOf(query) >= 0 || text.indexOf(query) >= 0
-        })),
-
         hideAllOptions: () => Array.from(this.options).forEach(option => option.setAttribute('hidden', '')),
 
         inputFocusHandler: evt => {
           this.inputElement.addEventListener('keydown', this.PRIVATE.inputKeydownHandler);
         },
 
-        inputKeydownHandler: evt => {
-          if (!this.open) {
+        clearFilter: () => {
+          if (this.optionsElement.hasFilter('query')) {
+            this.optionsElement.removeFilter('query');
+            this.selectedIndex = -1;
+          }
+        },
+
+        filterInput: () => {
+          this.PRIVATE.clearFilter();
+
+          let query = this.inputElement.value;
+
+          if (!query || query === '') {
             this.PRIVATE.showAllOptions();
-            this.open = true;
-            return
+            return this.PRIVATE.clearFilter()
+          }
+
+          this.optionsElement.addFilter('query', () => {
+            let results = this.optionsElement.find(query, this['case-sensitive']);
+
+            if (results.length) {
+              return results
+            }
+
+            return this.options
+          });
+
+          this.PRIVATE.hideAllOptions();
+          this.optionsElement.filteredOptions.forEach(option => option.hidden = false);
+        },
+
+        inputKeydownHandler: evt => {
+          switch (evt[this.keySource]) {
+            case 13:
+            case 'Enter':
+            case 27:
+            case 'Escape':
+            case 38:
+            case 'ArrowUp':
+            case 40:
+            case 'ArrowDown': break
+
+            case 32:
+            case ' ': return
+
+            case 8:
+            case 'Backspace':
+              if (this.inputElement.value.length === 1) {
+                this.open = false;
+              }
+
+              break
           }
 
           this.PRIVATE.keydownHandler(evt);
@@ -56,53 +92,23 @@ var AuthorDatalistElement = (function () {
 
       this.UTIL.registerListeners(this, {
         connected: () => {
-          this.inputElement.addEventListener('focus', this.PRIVATE.inputFocusHandler);
-
           this.UTIL.registerListeners(this.inputElement, {
+            focus: this.PRIVATE.inputFocusHandler,
+
             blur: evt => {
-              this.PRIVATE.clickCount = 0;
               this.inputElement.removeEventListener('keydown', this.PRIVATE.inputKeydownHandler);
             },
 
-            click: evt => {
-              this.PRIVATE.clickCount++;
+            click: evt => this.open = true,
 
-              if (this.PRIVATE.clickCount === 2) {
-                this.PRIVATE.showAllOptions();
-                this.open = true;
-              }
-            },
-
-            input: evt => {
-              this.PRIVATE.hideAllOptions();
-              let query = this.inputElement.value;
-
-              if (!query) {
-                return
-              }
-
-              let results = this.PRIVATE.find(query);
-
-              if (results.length) {
-                results.forEach(result => result.removeAttribute('hidden'));
-                this.open = true;
-                return
-              }
-
-              if (this.open) {
-                this.open = false;
-              }
-
-              this.PRIVATE.hideAllOptions();
-            }
+            input: this.PRIVATE.filterInput
           });
         },
 
-        disconnected: () => {
-          this.inputElement.removeEventListener('focus', this.PRIVATE.inputFocusHandler);
-        },
-
-        'options.selected': evt => this.inputElement.value = evt.detail.options[0].value
+        'options.selected': evt => {
+          this.inputElement.value = evt.detail.options[0].value;
+          this.PRIVATE.filterInput();
+        }
       });
     }
 
@@ -175,7 +181,7 @@ var AuthorDatalistElement = (function () {
       // this.options.push(option)
     }
 
-    inject (input, datalist, guid) {
+    inject (input, select, guid) {
       // Prevent re-injections
       if (this.PRIVATE.injected) {
         return
@@ -190,7 +196,7 @@ var AuthorDatalistElement = (function () {
       });
 
       this.appendChild(this.inputElement);
-      super.inject(datalist);
+      super.inject(select);
     }
   }
 

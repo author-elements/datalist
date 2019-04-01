@@ -3,7 +3,8 @@ class AuthorDatalistElement extends AuthorMenuElement {
     super(`{{TEMPLATE-STRING}}`)
 
     this.UTIL.defineAttributes({
-      'case-sensitive': false
+      'case-sensitive': false,
+      'force-open': false
     })
 
     this.UTIL.definePrivateMethods({
@@ -41,7 +42,13 @@ class AuthorDatalistElement extends AuthorMenuElement {
         })
 
         this.PRIVATE.hideAllOptions()
-        this.optionsElement.filteredOptions.forEach(option => option.hidden = false)
+
+        if (this.optionsElement.filteredOptions.length > 0) {
+          this.optionsElement.filteredOptions.forEach(option => option.hidden = false)
+          this.open = true
+        } else {
+          this.open = false
+        }
       },
 
       inputKeydownHandler: evt => {
@@ -85,6 +92,10 @@ class AuthorDatalistElement extends AuthorMenuElement {
           click: evt => this.open = true,
 
           input: this.PRIVATE.filterInput
+        })
+
+        this.UTIL.registerListeners(window, {
+          scroll: evt => this.open = false
         })
       },
 

@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-menu v1.0.7 available at github.com/author-elements/menu
-// Last Build: 3/28/2019, 1:29:32 AM
+// @author.io/element-menu v1.0.12 available at github.com/author-elements/menu
+// Last Build: 4/1/2019, 8:46:27 PM
 var AuthorMenuElement = (function () {
   'use strict';
 
@@ -203,21 +203,27 @@ var AuthorMenuElement = (function () {
         stateChangeHandler: evt => {
           let { name, value } = evt.detail;
 
-          if (name === 'multiple' && value && this.hasAttribute('open')) {
-            this.removeAttribute('open');
-          }
+          this.optionsElement.unHoverAllOptions();
 
-          if (name === 'open') {
-            if (!value) {
-              return this.PRIVATE.removeOpenListeners()
-            }
+          switch (name) {
+            case 'multiple':
+              value && this.removeAttribute('open');
+              return
 
-            if (this.multiple) {
-              return this.removeAttribute('open')
-            }
+            case 'open':
+              if (this.multiple) {
+                return this.removeAttribute('open')
+              }
 
-            this.optionsElement.unHoverAllOptions();
-            return this.PRIVATE.addOpenListeners()
+              if (value) {
+                if (!this.hasAttribute('open')) {
+                  this.setAttribute('open', '');
+                }
+
+                return this.PRIVATE.addOpenListeners()
+              }
+
+              this.PRIVATE.removeOpenListeners();
           }
         },
 
@@ -242,7 +248,7 @@ var AuthorMenuElement = (function () {
             case 'open':
               return this.emit('state.change', {
                 name: 'open',
-                value: this.open
+                value: this.hasAttribute('open')
               })
 
               case 'size':
@@ -279,7 +285,7 @@ var AuthorMenuElement = (function () {
     }
 
     static get observedAttributes () {
-      return ['autofocus', 'disabled', 'name', 'open', 'placeholder', 'tabindex', 'size']
+      return ['autofocus', 'disabled', 'force-open', 'name', 'open', 'placeholder', 'tabindex', 'size']
     }
 
     get length () {

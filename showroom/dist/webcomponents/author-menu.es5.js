@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-menu v1.0.7 available at github.com/author-elements/menu
-// Last Build: 3/28/2019, 1:29:32 AM
+// @author.io/element-menu v1.0.12 available at github.com/author-elements/menu
+// Last Build: 4/1/2019, 8:46:27 PM
 var AuthorMenuElement = (function () {
   'use strict';
 
@@ -321,22 +321,28 @@ var AuthorMenuElement = (function () {
               name = _evt$detail.name,
               value = _evt$detail.value;
 
-          if (name === 'multiple' && value && _this.hasAttribute('open')) {
-            _this.removeAttribute('open');
-          }
+          _this.optionsElement.unHoverAllOptions();
 
-          if (name === 'open') {
-            if (!value) {
-              return _this.PRIVATE.removeOpenListeners();
-            }
+          switch (name) {
+            case 'multiple':
+              value && _this.removeAttribute('open');
+              return;
 
-            if (_this.multiple) {
-              return _this.removeAttribute('open');
-            }
+            case 'open':
+              if (_this.multiple) {
+                return _this.removeAttribute('open');
+              }
 
-            _this.optionsElement.unHoverAllOptions();
+              if (value) {
+                if (!_this.hasAttribute('open')) {
+                  _this.setAttribute('open', '');
+                }
 
-            return _this.PRIVATE.addOpenListeners();
+                return _this.PRIVATE.addOpenListeners();
+              }
+
+              _this.PRIVATE.removeOpenListeners();
+
           }
         },
         throwSizeAttributeWarning: function throwSizeAttributeWarning() {
@@ -364,7 +370,7 @@ var AuthorMenuElement = (function () {
             case 'open':
               return _this.emit('state.change', {
                 name: 'open',
-                value: _this.open
+                value: _this.hasAttribute('open')
               });
 
             case 'size':
@@ -557,7 +563,7 @@ var AuthorMenuElement = (function () {
     }], [{
       key: "observedAttributes",
       get: function get() {
-        return ['autofocus', 'disabled', 'name', 'open', 'placeholder', 'tabindex', 'size'];
+        return ['autofocus', 'disabled', 'force-open', 'name', 'open', 'placeholder', 'tabindex', 'size'];
       }
     }]);
 

@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-menu v1.0.12 available at github.com/author-elements/menu
-// Last Build: 4/1/2019, 8:46:27 PM
+// @author.io/element-menu v1.0.14 available at github.com/author-elements/menu
+// Last Build: 4/1/2019, 9:06:47 PM
 var AuthorMenuElement = (function () {
   'use strict';
 
@@ -198,6 +198,7 @@ var AuthorMenuElement = (function () {
         placeholder: '',
         autofocus: false,
         disabled: false,
+        'force-open': false,
         open: false,
         required: false,
         size: {
@@ -367,10 +368,16 @@ var AuthorMenuElement = (function () {
           }
 
           switch (attribute) {
+            case 'force-open':
+              return _this.emit('state.change', {
+                name: 'open',
+                value: true
+              });
+
             case 'open':
               return _this.emit('state.change', {
                 name: 'open',
-                value: _this.hasAttribute('open')
+                value: _this.hasAttribute('open') || _this.hasAttribute('force-open')
               });
 
             case 'size':

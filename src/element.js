@@ -3,8 +3,7 @@ class AuthorDatalistElement extends AuthorMenuElement {
     super(`{{TEMPLATE-STRING}}`)
 
     this.UTIL.defineAttributes({
-      'case-sensitive': false,
-      'force-open': false
+      'case-sensitive': false
     })
 
     this.UTIL.definePrivateMethods({

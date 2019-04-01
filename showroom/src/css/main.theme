@@ -261,7 +261,11 @@ components {
 		@state open {
 			box-shadow: inset 0 -2px 0 0 var(--blue);
 
-			author-options {
+			& input {
+				box-shadow: inset 0 -2px 0 0 var(--blue);
+			}
+
+			& author-options {
 				height: auto;
 			}
 		}

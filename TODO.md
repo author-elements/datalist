@@ -1,0 +1,1 @@
+- If text is selected in the input, don't open author-options on arrow or down keydown events. First, clear the selection, then if the arrow key is pressed again, open author-options

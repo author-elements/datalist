@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-datalist v1.0.6 available at github.com/author-elements/datalist
-// Last Build: 4/1/2019, 2:10:55 PM
+// @author.io/element-datalist v1.0.8 available at github.com/author-elements/datalist
+// Last Build: 4/1/2019, 2:56:39 PM
 var AuthorDatalistElement = (function () {
   'use strict';
 
@@ -252,7 +252,13 @@ var AuthorDatalistElement = (function () {
             click: function click(evt) {
               return _this.open = true;
             },
-            input: _this.PRIVATE.filterInput
+            input: function input(evt) {
+              _this.PRIVATE.filterInput(evt);
+
+              if (evt.inputType.includes('delete')) {
+                _this.optionsElement.unHoverAllOptions();
+              }
+            }
           });
 
           _this.UTIL.registerListeners(window, {
@@ -268,6 +274,13 @@ var AuthorDatalistElement = (function () {
           _this.PRIVATE.filterInput();
 
           _this.emit('option.selected', option.displayElement);
+
+          _this.open = false;
+        },
+        'state.change': function stateChange(evt) {
+          if (evt.detail.name === 'open' && evt.detail.value && _this.inputElement.value === '') {
+            _this.optionsElement.unHoverAllOptions();
+          }
         }
       });
 

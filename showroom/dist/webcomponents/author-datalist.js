@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-datalist v1.0.6 available at github.com/author-elements/datalist
-// Last Build: 4/1/2019, 2:10:55 PM
+// @author.io/element-datalist v1.0.8 available at github.com/author-elements/datalist
+// Last Build: 4/1/2019, 2:56:39 PM
 var AuthorDatalistElement = (function () {
   'use strict';
 
@@ -76,10 +76,12 @@ var AuthorDatalistElement = (function () {
             case 38:
             case 'ArrowUp':
             case 40:
-            case 'ArrowDown': break
+            case 'ArrowDown':
+              break
 
             case 32:
-            case ' ': return
+            case ' ':
+              return
 
             case 8:
             case 'Backspace':
@@ -107,7 +109,13 @@ var AuthorDatalistElement = (function () {
 
             click: evt => this.open = true,
 
-            input: this.PRIVATE.filterInput
+            input: evt => {
+              this.PRIVATE.filterInput(evt);
+
+              if (evt.inputType.includes('delete')) {
+                this.optionsElement.unHoverAllOptions();
+              }
+            }
           });
 
           this.UTIL.registerListeners(window, {
@@ -120,6 +128,13 @@ var AuthorDatalistElement = (function () {
           this.inputElement.value = option.value;
           this.PRIVATE.filterInput();
           this.emit('option.selected', option.displayElement);
+          this.open = false;
+        },
+
+        'state.change': evt => {
+          if (evt.detail.name === 'open' && evt.detail.value && this.inputElement.value === '') {
+            this.optionsElement.unHoverAllOptions();
+          }
         }
       });
     }

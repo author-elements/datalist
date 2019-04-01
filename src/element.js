@@ -59,10 +59,12 @@ class AuthorDatalistElement extends AuthorMenuElement {
           case 38:
           case 'ArrowUp':
           case 40:
-          case 'ArrowDown': break
+          case 'ArrowDown':
+            break
 
           case 32:
-          case ' ': return
+          case ' ':
+            return
 
           case 8:
           case 'Backspace':
@@ -90,7 +92,13 @@ class AuthorDatalistElement extends AuthorMenuElement {
 
           click: evt => this.open = true,
 
-          input: this.PRIVATE.filterInput
+          input: evt => {
+            this.PRIVATE.filterInput(evt)
+
+            if (evt.inputType.includes('delete')) {
+              this.optionsElement.unHoverAllOptions()
+            }
+          }
         })
 
         this.UTIL.registerListeners(window, {
@@ -103,6 +111,13 @@ class AuthorDatalistElement extends AuthorMenuElement {
         this.inputElement.value = option.value
         this.PRIVATE.filterInput()
         this.emit('option.selected', option.displayElement)
+        this.open = false
+      },
+
+      'state.change': evt => {
+        if (evt.detail.name === 'open' && evt.detail.value && this.inputElement.value === '') {
+          this.optionsElement.unHoverAllOptions()
+        }
       }
     })
   }

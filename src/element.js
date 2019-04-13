@@ -136,7 +136,7 @@ class AuthorDatalistElement extends AuthorMenuElement {
 
   clear () {
     this.inputElement.value = ''
-    this.optionsElement.selectedIndex = -1
+    this.selectedIndex = -1
     this.PRIVATE.showAllOptions()
   }
 

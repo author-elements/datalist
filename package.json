@@ -1,6 +1,6 @@
 {
   "name": "@author.io/element-datalist",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "author-datalist custom element (web component).",
   "main": "dist/author-datalist.min.js",
   "scripts": {

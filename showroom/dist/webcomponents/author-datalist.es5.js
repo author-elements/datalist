@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-datalist v1.0.9 available at github.com/author-elements/datalist
-// Last Build: 4/12/2019, 6:07:59 PM
+// @author.io/element-datalist v1.0.10 available at github.com/author-elements/datalist
+// Last Build: 4/15/2019, 1:32:04 PM
 var AuthorDatalistElement = (function () {
   'use strict';
 
@@ -153,7 +153,7 @@ var AuthorDatalistElement = (function () {
 
       _classCallCheck(this, AuthorDatalistElement);
 
-      _this = _possibleConstructorReturn(this, _getPrototypeOf(AuthorDatalistElement).call(this, "<template><style>@charset \"UTF-8\"; :host{display:inline-flex;max-width:100%}:host *,:host :after,:host :before{box-sizing:border-box}:host ::slotted(author-options){height:0;overflow:hidden}:host([open]) ::slotted(author-options){height:auto}author-datalist{display:inline-flex;max-width:100%}author-datalist *,author-datalist :after,author-datalist :before{box-sizing:border-box}author-datalist author-options{height:0;overflow:hidden}author-datalist[open] author-options{height:auto}</style><slot name=\"afterbegin\"></slot><slot name=\"beforeinput\"></slot><slot name=\"input\"></slot><slot name=\"afterinput\"></slot><slot name=\"beforeselectedoptions\"></slot><slot name=\"selectedoptions\"></slot><slot name=\"afterselectedoptions\"></slot><slot name=\"beforeoptions\"></slot><slot name=\"options\"></slot><slot name=\"afteroptions\"></slot><slot name=\"beforeend\"></slot></template>"));
+      _this = _possibleConstructorReturn(this, _getPrototypeOf(AuthorDatalistElement).call(this, "<template><style>@charset \"UTF-8\"; :host{display:inline-flex;max-width:100%}:host *,:host :after,:host :before{box-sizing:border-box}author-datalist{display:inline-flex;max-width:100%}author-datalist *,author-datalist :after,author-datalist :before{box-sizing:border-box}</style><slot name=\"afterbegin\"></slot><slot name=\"beforeinput\"></slot><slot name=\"input\"></slot><slot name=\"afterinput\"></slot><slot name=\"beforeselectedoptions\"></slot><slot name=\"selectedoptions\"></slot><slot name=\"afterselectedoptions\"></slot><slot name=\"beforeoptions\"></slot><slot name=\"options\"></slot><slot name=\"afteroptions\"></slot><slot name=\"beforeend\"></slot></template>"));
 
       _this.UTIL.defineAttributes({
         'case-sensitive': false

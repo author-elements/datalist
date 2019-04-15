@@ -8,12 +8,3 @@
 :host *:after {
   box-sizing: border-box;
 }
-
-:host ::slotted(author-options) {
-  height: 0;
-  overflow: hidden;
-}
-
-:host([open]) ::slotted(author-options) {
-  height: auto;
-}

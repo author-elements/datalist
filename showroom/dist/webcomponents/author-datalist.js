@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-datalist v1.0.10 available at github.com/author-elements/datalist
-// Last Build: 4/15/2019, 1:32:04 PM
+// @author.io/element-datalist v1.0.11 available at github.com/author-elements/datalist
+// Last Build: 4/29/2019, 8:41:36 PM
 var AuthorDatalistElement = (function () {
   'use strict';
 
@@ -25,10 +25,6 @@ var AuthorDatalistElement = (function () {
 
       this.UTIL.definePrivateMethods({
         hideAllOptions: () => Array.from(this.options).forEach(option => option.setAttribute('hidden', '')),
-
-        inputFocusHandler: evt => {
-          this.inputElement.addEventListener('keydown', this.PRIVATE.inputKeydownHandler);
-        },
 
         clearFilter: () => {
           if (this.optionsElement.hasFilter('query')) {
@@ -100,12 +96,24 @@ var AuthorDatalistElement = (function () {
 
       this.UTIL.registerListeners(this, {
         connected: () => {
-          this.UTIL.registerListeners(this.inputElement, {
-            focus: this.PRIVATE.inputFocusHandler,
+          this.UTIL.registerListeners(this, {
+            focus: evt => {
+              if (document.activeElement === this) {
+                this.inputElement.focus();
+                return evt.stopImmediatePropagation()
+              }
 
+              this.inputElement.addEventListener('keydown', this.PRIVATE.inputKeydownHandler);
+            }
+          });
+
+          this.UTIL.registerListeners(this.inputElement, {
             blur: evt => {
               this.inputElement.removeEventListener('keydown', this.PRIVATE.inputKeydownHandler);
+              this.emit('blur');
             },
+
+            focus: evt => this.emit('focus'),
 
             click: evt => this.open = true,
 
@@ -149,6 +157,10 @@ var AuthorDatalistElement = (function () {
 
     add (option, index) {
       this.optionsElement.addOption(option, index);
+    }
+
+    addFilter (key, func) {
+      this.optionsElement.addFilter(key, func);
     }
 
     clear () {

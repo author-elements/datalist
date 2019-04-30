@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-menu v1.0.14 available at github.com/author-elements/menu
-// Last Build: 4/1/2019, 9:06:47 PM
+// @author.io/element-menu v1.0.18 available at github.com/author-elements/menu
+// Last Build: 4/10/2019, 9:48:39 PM
 var AuthorMenuElement = (function () {
   'use strict';
 
@@ -20,8 +20,14 @@ var AuthorMenuElement = (function () {
       super(templateString || `<template><style>@charset "UTF-8"; :host *,:host :after,:host :before{box-sizing:border-box}author-menu *,author-menu :after,author-menu :before{box-sizing:border-box}</style><slot></slot></template>`);
 
       this.UTIL.defineProperties({
+        sourceForm: {
+          private: true,
+          default: null
+        },
+
         form: {
-          readonly: true
+          readonly: true,
+          get: () => this.PRIVATE.sourceForm
         },
 
         hoveredIndex: {
@@ -204,8 +210,6 @@ var AuthorMenuElement = (function () {
         stateChangeHandler: evt => {
           let { name, value } = evt.detail;
 
-          this.optionsElement.unHoverAllOptions();
-
           switch (name) {
             case 'multiple':
               value && this.removeAttribute('open');
@@ -213,6 +217,7 @@ var AuthorMenuElement = (function () {
 
             case 'open':
               if (this.multiple) {
+                this.optionsElement.unHoverAllOptions();
                 return this.removeAttribute('open')
               }
 
@@ -321,6 +326,22 @@ var AuthorMenuElement = (function () {
       this.optionsElement.addOption(option, index);
     }
 
+    addFilter (key, func) {
+      this.optionsElement.addFilter(key, func);
+    }
+
+    hasFilter (key) {
+      return this.optionsElement.hasFilter(key)
+    }
+
+    removeAllFilters () {
+      this.optionsElement.removeAllFilters();
+    }
+
+    removeFilter () {
+      this.optionsElement.removeFilter(key);
+    }
+
     checkValidity () {
       return this.sourceElement.checkValidity()
     }
@@ -337,6 +358,14 @@ var AuthorMenuElement = (function () {
       // Prevent re-injections
       if (this.PRIVATE.injected) {
         return
+      }
+
+      this.PRIVATE.sourceForm = sourceElement.form;
+
+      if (this.PRIVATE.sourceForm !== null) {
+        this.UTIL.registerListeners(this.PRIVATE.sourceForm, {
+          reset: evt => this.deselectAll()
+        });
       }
 
       this.UTIL.defineProperty('sourceElement', {

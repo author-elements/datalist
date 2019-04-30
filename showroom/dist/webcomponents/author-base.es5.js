@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-base v1.1.1 available at github.com/author-elements/base
-// Last Build: 3/16/2019, 10:45:53 PM
+// @author.io/element-base v1.1.3 available at github.com/author-elements/base
+// Last Build: 4/12/2019, 10:06:51 PM
 var AuthorBaseElement = (function () {
   'use strict';
 
@@ -934,32 +934,46 @@ var AuthorBaseElement = (function () {
                 var error = new Error();
                 var vars = properties.vars;
 
-                if (type === 'dependency') {
-                  finalMessage += 'Missing dependency';
+                switch (type) {
+                  case 'custom':
+                    break;
 
-                  if (vars) {
-                    if (vars.hasOwnProperty('name')) {
-                      finalMessage += ": ".concat(vars.name);
+                  case 'dependency':
+                    finalMessage += 'Missing dependency';
+
+                    if (vars) {
+                      if (vars.hasOwnProperty('name')) {
+                        finalMessage += ": ".concat(vars.name);
+                      }
+
+                      if (vars.hasOwnProperty('url')) {
+                        finalMessage += " ".concat(vars.url);
+                      }
                     }
 
-                    if (vars.hasOwnProperty('url')) {
-                      finalMessage += " ".concat(vars.url);
-                    }
-                  }
-                } else if (type === 'readonly') {
-                  finalMessage += "Cannot set read-only property";
+                    break;
 
-                  if (vars && vars.hasOwnProperty('prop')) {
-                    finalMessage += " \"".concat(vars.prop, "\"");
-                  }
-                } else if (type === 'reference') {
-                  error = new ReferenceError();
-                } else if (type === 'type') {
-                  error = new TypeError();
-                } else {
-                  return _this.UTIL.throwError({
-                    message: "Unrecognized error type \"".concat(type, "\". Accepted types: \"custom\", \"dependency\", \"readonly\", \"reference\", \"type\"")
-                  });
+                  case 'readonly':
+                    finalMessage += "Cannot set read-only property";
+
+                    if (vars && vars.hasOwnProperty('prop')) {
+                      finalMessage += " \"".concat(vars.prop, "\"");
+                    }
+
+                    break;
+
+                  case 'reference':
+                    error = new ReferenceError();
+                    break;
+
+                  case 'type':
+                    error = new TypeError();
+                    break;
+
+                  default:
+                    return _this.UTIL.throwError({
+                      message: "Unrecognized error type \"".concat(type, "\". Accepted types: \"custom\", \"dependency\", \"readonly\", \"reference\", \"type\"")
+                    });
                 }
 
                 if (properties.hasOwnProperty('message')) {
@@ -1028,6 +1042,21 @@ var AuthorBaseElement = (function () {
                 };
 
                 _this.childMonitor.observe(_assertThisInitialized(_this), cfg);
+              }
+            },
+
+            /**
+             * @method disableChildMonitor
+             * Disable monitoring of child elements.
+             * Disconnects MutationObserver and sets this.childMonitor to null.
+             */
+            disableChildMonitor: {
+              value: function value() {
+                if (_this.childMonitor) {
+                  _this.childMonitor.disconnect();
+
+                  _this.childMonitor = null;
+                }
               }
             },
 

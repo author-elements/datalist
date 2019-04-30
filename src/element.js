@@ -9,10 +9,6 @@ class AuthorDatalistElement extends AuthorMenuElement {
     this.UTIL.definePrivateMethods({
       hideAllOptions: () => Array.from(this.options).forEach(option => option.setAttribute('hidden', '')),
 
-      inputFocusHandler: evt => {
-        this.inputElement.addEventListener('keydown', this.PRIVATE.inputKeydownHandler)
-      },
-
       clearFilter: () => {
         if (this.optionsElement.hasFilter('query')) {
           this.optionsElement.removeFilter('query')
@@ -83,12 +79,24 @@ class AuthorDatalistElement extends AuthorMenuElement {
 
     this.UTIL.registerListeners(this, {
       connected: () => {
-        this.UTIL.registerListeners(this.inputElement, {
-          focus: this.PRIVATE.inputFocusHandler,
+        this.UTIL.registerListeners(this, {
+          focus: evt => {
+            if (document.activeElement === this) {
+              this.inputElement.focus()
+              return evt.stopImmediatePropagation()
+            }
 
+            this.inputElement.addEventListener('keydown', this.PRIVATE.inputKeydownHandler)
+          }
+        })
+
+        this.UTIL.registerListeners(this.inputElement, {
           blur: evt => {
             this.inputElement.removeEventListener('keydown', this.PRIVATE.inputKeydownHandler)
+            this.emit('blur')
           },
+
+          focus: evt => this.emit('focus'),
 
           click: evt => this.open = true,
 
@@ -132,6 +140,10 @@ class AuthorDatalistElement extends AuthorMenuElement {
 
   add (option, index) {
     this.optionsElement.addOption(option, index)
+  }
+
+  addFilter (key, func) {
+    this.optionsElement.addFilter(key, func)
   }
 
   clear () {

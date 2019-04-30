@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-control v1.0.11 available at github.com/author-elements/control
-// Last Build: 3/28/2019, 4:40:09 AM
+// @author.io/element-control v1.0.15 available at github.com/author-elements/control
+// Last Build: 4/6/2019, 3:13:30 AM
 var AuthorFormControlElement = (function () {
   'use strict';
 
@@ -12,19 +12,60 @@ var AuthorFormControlElement = (function () {
               function AuthorFormControlElement () {
       var this$1 = this;
 
-      superclass.call(this, "<template><style>@charset \"UTF-8\"; :host{display:flex;contain:style;max-width:100%}:host([type=field]){flex-direction:column}:host([type=select]){flex-direction:column}:host([type=toggle]){align-items:center}:host *,:host :after,:host :before{box-sizing:border-box}:host .hidden{display:none;visibility:hidden;opacity:0}:host .label-wrapper{flex:1 1 auto;display:flex}:host .input-wrapper{display:flex;align-items:center}:host([type=toggle]) .input-wrapper{order:-1;justify-content:center}author-control{display:flex;contain:style;max-width:100%}author-control[type=field]{flex-direction:column}author-control[type=select]{flex-direction:column}author-control[type=toggle]{align-items:center}author-control *,author-control :after,author-control :before{box-sizing:border-box}author-control .hidden{display:none;visibility:hidden;opacity:0}author-control .label-wrapper{flex:1 1 auto;display:flex}author-control .input-wrapper{display:flex;align-items:center}author-control[type=toggle] .input-wrapper{order:-1;justify-content:center}</style><slot name=\"afterbegin\"></slot><slot name=\"beforelabelwrapper\"></slot><div class=\"label-wrapper\"><slot name=\"beforelabel\"></slot><slot name=\"label\"></slot><slot name=\"afterlabel\"></slot></div><slot name=\"afterlabelwrapper\"></slot><slot name=\"beforeinputwrapper\"></slot><div class=\"input-wrapper\"><slot name=\"beforeinput\"></slot><slot name=\"input\"></slot><slot name=\"afterinput\"></slot></div><slot name=\"afterinputwrapper\"></slot><slot name=\"beforeend\"></slot></template>");
+      superclass.call(this, "<template><style>@charset \"UTF-8\"; :host{display:block;contain:style;max-width:100%}:host *,:host :after,:host :before{box-sizing:border-box}author-control{display:block;contain:style;max-width:100%}author-control *,author-control :after,author-control :before{box-sizing:border-box}</style><slot></slot></template>");
 
       this.UTIL.defineAttributes({
         type: ''
       });
 
       this.UTIL.defineProperties({
+        initialized: {
+          private: true,
+          default: false
+        },
+
         initialValue: {
           default: null
         },
 
+        labels: {
+          readonly: true,
+          get: function () { return this$1.PRIVATE.labelElements; }
+        },
+
+        labelElements: {
+          private: true,
+          default: []
+        },
+
+        datalist: {
+          readonly: true,
+          get: function () { return this$1.PRIVATE.datalistElement; }
+        },
+
+        datalistElement: {
+          private: true,
+          default: null
+        },
+
+        datalistSourceElement: {
+          private: true,
+          default: null
+        },
+
         input: {
-          private: true
+          readonly: true,
+          get: function () { return this$1.PRIVATE.inputElement; }
+        },
+
+        inputElement: {
+          private: true,
+          default: null
+        },
+
+        inputSourceElement: {
+          private: true,
+          default: null
         },
 
         fieldInputTypes: {
@@ -75,206 +116,167 @@ var AuthorFormControlElement = (function () {
       });
 
       this.UTIL.definePrivateMethods({
-        initDatalist: function (input, datalist) {
-          this$1.type = 'select';
+        catalogChild: function (node) {
+          switch (node.nodeName) {
+            case 'LABEL':
+              node.htmlFor = this$1.PRIVATE.guid;
+              this$1.PRIVATE.labelElements.push(node);
+              return
 
-          if (!customElements.get('author-datalist')) {
-            input.id = this$1.PRIVATE.guid;
-            datalist.id = (input.id) + "_datalist";
-            input.setAttribute('list', datalist.id);
-            input.slot = input.slot || 'input';
-            // select.setAttribute('role', 'menu')
-            this$1.PRIVATE.input = input;
+            case 'INPUT':
+            case 'TEXTAREA':
+              node.id = this$1.PRIVATE.guid;
+              this$1.PRIVATE.inputSourceElement = node;
+              return
 
-            var titleEls = datalist.querySelectorAll('option[title]');
-            titleEls.forEach(function (el) { return select.removeChild(el); });
+            case 'SELECT':
+              this$1.PRIVATE.inputSourceElement = node;
+              return
 
-            Array.from(datalist.options).forEach(function (option) {
-              if (option.hasAttribute('label') && option.getAttribute('label').trim() === '') {
-                option.removeAttribute('label');
+            case 'DATALIST':
+              this$1.PRIVATE.datalistSourceElement = node;
+              return
+
+            default: if (node.children.length > 0) {
+              return Array.from(node.children).forEach(function (child) { return this$1.PRIVATE.catalogChild(child); })
+            }
+          }
+        },
+
+        init: function () {
+          this$1.initialValue = this$1.PRIVATE.inputSourceElement.value;
+
+          switch (this$1.PRIVATE.inputSourceElement.nodeName) {
+            case 'INPUT':
+              this$1.PRIVATE.inputElement = this$1.PRIVATE.inputSourceElement;
+
+              if (this$1.PRIVATE.datalistSourceElement) {
+                this$1.type = 'datalist';
+
+                if (!customElements.get('author-datalist')) {
+                  this$1.PRIVATE.initDefaultDatalist();
+                  break
+                }
+
+                this$1.PRIVATE.initAuthorDatalist();
+
+              } else if (this$1.PRIVATE.fieldInputTypes.indexOf(this$1.PRIVATE.inputElement.type) >= 0) {
+                this$1.type = 'field';
+              } else if (this$1.PRIVATE.toggleInputTypes.indexOf(this$1.PRIVATE.inputElement.type) >= 0) {
+                this$1.type = 'toggle';
               }
-            });
 
-            return
+              break
+
+            case 'TEXTAREA':
+              this$1.PRIVATE.inputElement = this$1.PRIVATE.inputSourceElement;
+              this$1.type = 'textarea';
+              break
+
+            case 'SELECT':
+              this$1.type = 'select';
+
+              if (!customElements.get('author-select')) {
+                this$1.PRIVATE.initDefaultSelect();
+                break
+              }
+
+              this$1.PRIVATE.initAuthorSelect();
+              break
           }
 
-          var surrogate = document.createElement('author-datalist');
-          surrogate.slot = 'input';
+          this$1.PRIVATE.initialized = true;
+          this$1.emit('initialized');
+        },
 
-          Array.from(datalist.attributes).forEach(function (attr) {
+        initAuthorDatalist: function () {
+          var ref = this$1.PRIVATE;
+          var datalistSourceElement = ref.datalistSourceElement;
+          var inputElement = ref.inputElement;
+          var guid = ref.guid;
+
+          var authorDatalist = document.createElement('author-datalist');
+
+          Array.from(datalistSourceElement.attributes).forEach(function (attr) {
             if (attr.specified) {
-              surrogate.setAttribute(attr.name, attr.value);
+              authorDatalist.setAttribute(attr.name, attr.value);
 
               if (attr.name === 'autofocus') {
-                datalist.removeAttribute(attr.name);
+                datalistSourceElement.removeAttribute(attr.name);
               }
             }
           });
 
-          this$1.removeChild(datalist);
-          this$1.removeChild(input);
+          this$1.removeChild(inputElement);
 
           // Use a select as sourceElement to preserve option indexes, since
           // datalist doesn't assign indexes to child options
-          var select = document.createElement('select');
-          Array.from(datalist.children).forEach(function (option) { return select.add(option); });
-          select.selectedIndex = -1;
+          var surrogate = document.createElement('select');
+          Array.from(datalistSourceElement.children).forEach(function (option) { return surrogate.add(option); });
+          surrogate.selectedIndex = -1;
 
-          surrogate.inject(input, select, this$1.PRIVATE.guid);
-          this$1.appendChild(surrogate);
-          this$1.PRIVATE.input = surrogate;
+          authorDatalist.inject(inputElement, surrogate, guid);
+          this$1.replaceChild(authorDatalist, datalistSourceElement);
+          this$1.PRIVATE.inputElement = authorDatalist;
         },
 
-        initInput: function (input) {
-          input.slot = input.slot || 'input';
-          this$1.PRIVATE.input = input;
-          input.id = this$1.PRIVATE.guid;
-          this$1.initialValue = input.value;
+        initDefaultDatalist: function () {
+          var ref = this$1.PRIVATE;
+          var datalistSourceElement = ref.datalistSourceElement;
+          var inputElement = ref.inputElement;
+          var guid = ref.guid;
 
-          if (this$1.PRIVATE.fieldInputTypes.indexOf(input.type) >= 0) {
-            this$1.type = 'field';
-          }
+          datalistSourceElement.id = guid + "_datalist";
+          inputElement.setAttribute('list', datalistSourceElement.id);
 
-          if (this$1.PRIVATE.toggleInputTypes.indexOf(input.type) >= 0) {
-            this$1.type = 'toggle';
-          }
+          this$1.PRIVATE.datalistElement = datalistSourceElement;
         },
 
-        initLabel: function (label) {
-          this$1.label = label;
-          label.slot = label.slot || 'label';
-          label.htmlFor = this$1.PRIVATE.guid;
+        initDefaultSelect: function () {
+          var ref = this$1.PRIVATE;
+          var inputSourceElement = ref.inputSourceElement;
 
-          if (this$1.type === 'select') {
-            this$1.label.addEventListener('click', function (evt) {
-              this$1.input.focus();
-            });
-          }
+          inputSourceElement.id = this$1.PRIVATE.guid;
+          inputSourceElement.setAttribute('role', 'menu');
+
+          this$1.PRIVATE.inputElement = inputSourceElement;
         },
 
-        initDefaultSelect: function (select) {
-          select.id = this$1.PRIVATE.guid;
-          select.slot = select.slot || 'input';
-          select.setAttribute('role', 'menu');
-          this$1.PRIVATE.input = select;
+        initAuthorSelect: function () {
+          var ref = this$1.PRIVATE;
+          var inputSourceElement = ref.inputSourceElement;
+          var authorSelect = document.createElement('author-select');
 
-          // Purge incompatible attributes
-          var titleEls = select.querySelectorAll('option[title]');
-          titleEls.forEach(function (el) { return select.removeChild(el); });
+          authorSelect.id = this$1.PRIVATE.guid;
 
-          Array.from(select.options).forEach(function (option) {
-            if (option.hasAttribute('label') && option.getAttribute('label').trim() === '') {
-              option.removeAttribute('label');
-            }
-          });
-        },
-
-        initMultipleSelectMenu: function (select) {
-          this$1.type = 'select';
-          this$1.initialValue = select.selectedOptions;
-
-          if (!customElements.get('author-select')) {
-            return this$1.PRIVATE.initDefaultSelect(select)
-          }
-
-          this$1.PRIVATE.initSelectSurrogate(select, document.createElement('author-select'));
-        },
-
-        initSelectSurrogate: function (original, surrogate) {
-          surrogate.slot = 'input';
-          surrogate.id = this$1.PRIVATE.guid;
-
-          Array.from(original.attributes).forEach(function (attr) {
+          Array.from(inputSourceElement.attributes).forEach(function (attr) {
             if (attr.specified) {
-              surrogate.setAttribute(attr.name, attr.value);
+              authorSelect.setAttribute(attr.name, attr.value);
 
               if (attr.name === 'autofocus') {
-                original.removeAttribute(attr.name);
+                inputSourceElement.removeAttribute(attr.name);
               }
             }
           });
 
-          this$1.removeChild(original);
-          surrogate.inject(original, this$1.querySelectorAll('label'));
+          authorSelect.inject(inputSourceElement, this$1.labels);
 
-          this$1.appendChild(surrogate);
-          this$1.PRIVATE.input = surrogate;
-        },
+          this$1.replaceChild(authorSelect, inputSourceElement);
+          this$1.PRIVATE.inputElement = authorSelect;
 
-        initSelectMenu: function (select) {
-          this$1.type = 'select';
-          this$1.initialValue = select.selectedIndex;
-
-          if (!customElements.get('author-select')) {
-            return this$1.PRIVATE.initDefaultSelect(select)
-          }
-
-          this$1.PRIVATE.initSelectSurrogate(select, document.createElement('author-select'));
-        },
-
-        transformChild: function (node, index, collection) {
-          switch (node.nodeName) {
-            case 'LABEL':
-              return this$1.PRIVATE.initLabel(node)
-
-            case 'INPUT':
-              // Check if there is an additional element adjacent to the input
-              if (collection[index + 1] === void 0) {
-                return this$1.PRIVATE.initInput(node)
-              }
-
-              var adjacentElement = collection[index + 1];
-
-              if (!adjacentElement || adjacentElement.nodeName !== 'DATALIST') {
-                return this$1.PRIVATE.initInput(node)
-              }
-
-              return this$1.PRIVATE.initDatalist(node, adjacentElement)
-
-            case 'TEXTAREA':
-              return this$1.PRIVATE.initInput(node)
-
-            case 'SELECT':
-              if (!node.multiple) {
-                return this$1.PRIVATE.initSelectMenu(node)
-              }
-
-              return this$1.PRIVATE.initMultipleSelectMenu(node)
-
-            default:
-              this$1.initialValue = node.value;
-              return
-          }
+          // This is required for label clicks to focus author-select
+          this$1.labels.forEach(function (label) {
+            this$1.UTIL.registerListener(label, 'click', function (evt) { return this$1.PRIVATE.inputElement.focus(); });
+          });
         }
-      });
-
-      this.UTIL.monitorChildren(function (mutations, observer) {
-        var filtered = mutations.filter(function (record) {
-          var node = record.addedNodes.item(0);
-
-          if (!node) {
-            return false
-          }
-
-          return node.nodeType !== 3
-        });
-
-        filtered.forEach(function (record, index, array) {
-          var node = record.addedNodes.item(0);
-
-          if (!node) {
-            return
-          }
-
-          this$1.PRIVATE.transformChild(node, index, array.map(function (mutation) { return mutation.addedNodes.item(0); }));
-        });
-
-        observer.disconnect();
       });
 
       this.UTIL.registerListeners(this, {
         connected: function () { return this$1.PRIVATE.guid = this$1.UTIL.generateGuid('control_'); },
-        rendered: function () { return Array.from(this$1.children).forEach(function (child, index, array) { return this$1.PRIVATE.transformChild(child, index, array); }); }
+        rendered: function () {
+          Array.from(this$1.children).forEach(function (child) { return this$1.PRIVATE.catalogChild(child); });
+          this$1.PRIVATE.init();
+        }
       });
     }
 
@@ -282,26 +284,12 @@ var AuthorFormControlElement = (function () {
               AuthorFormControlElement.prototype = Object.create( superclass && superclass.prototype );
               AuthorFormControlElement.prototype.constructor = AuthorFormControlElement;
 
-              var prototypeAccessors = { input: { configurable: true } };
               var staticAccessors = { observedAttributes: { configurable: true } };
 
     staticAccessors.observedAttributes.get = function () {
       return ['disabled']
     };
 
-    prototypeAccessors.input.get = function () {
-      return this.PRIVATE.input
-    };
-
-    prototypeAccessors.input.set = function (input) {
-      if (this.input) {
-        return console.warn(("Setting <" + (this.localName) + "> child input programmatically is not allowed."))
-      }
-
-      this.PRIVATE.input = input;
-    };
-
-              Object.defineProperties( AuthorFormControlElement.prototype, prototypeAccessors );
               Object.defineProperties( AuthorFormControlElement, staticAccessors );
 
               return AuthorFormControlElement;

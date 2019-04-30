@@ -3,14 +3,20 @@ const Demo = new NGNX.VIEW.Registry({
   namespace: 'demo.',
 
   references: {
-    datalist: '.demo .default'
+    datalistControl: '.demo .default'
   },
 
   init () {
-    window.datalist = this.ref.datalist.element.input
+    let { datalistControl } = this.ref
 
-    window.datalist.on('blur', evt => {
-      console.log('heyyy');
+    window.datalist = datalistControl.element.input
+
+    // datalist.addFilter('test', () => {
+    //   console.log(test);
+    // })
+
+    datalist.on('focus', evt => {
+      console.log(evt);
     })
   }
 })

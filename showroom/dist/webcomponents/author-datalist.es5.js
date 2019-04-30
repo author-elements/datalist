@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-datalist v1.0.10 available at github.com/author-elements/datalist
-// Last Build: 4/15/2019, 1:32:04 PM
+// @author.io/element-datalist v1.0.11 available at github.com/author-elements/datalist
+// Last Build: 4/29/2019, 8:41:36 PM
 var AuthorDatalistElement = (function () {
   'use strict';
 
@@ -165,9 +165,6 @@ var AuthorDatalistElement = (function () {
             return option.setAttribute('hidden', '');
           });
         },
-        inputFocusHandler: function inputFocusHandler(evt) {
-          _this.inputElement.addEventListener('keydown', _this.PRIVATE.inputKeydownHandler);
-        },
         clearFilter: function clearFilter() {
           if (_this.optionsElement.hasFilter('query')) {
             _this.optionsElement.removeFilter('query');
@@ -244,10 +241,26 @@ var AuthorDatalistElement = (function () {
 
       _this.UTIL.registerListeners(_assertThisInitialized(_this), {
         connected: function connected() {
+          _this.UTIL.registerListeners(_assertThisInitialized(_this), {
+            focus: function focus(evt) {
+              if (document.activeElement === _assertThisInitialized(_this)) {
+                _this.inputElement.focus();
+
+                return evt.stopImmediatePropagation();
+              }
+
+              _this.inputElement.addEventListener('keydown', _this.PRIVATE.inputKeydownHandler);
+            }
+          });
+
           _this.UTIL.registerListeners(_this.inputElement, {
-            focus: _this.PRIVATE.inputFocusHandler,
             blur: function blur(evt) {
               _this.inputElement.removeEventListener('keydown', _this.PRIVATE.inputKeydownHandler);
+
+              _this.emit('blur');
+            },
+            focus: function focus(evt) {
+              return _this.emit('focus');
             },
             click: function click(evt) {
               return _this.open = true;
@@ -291,6 +304,11 @@ var AuthorDatalistElement = (function () {
       key: "add",
       value: function add(option, index) {
         this.optionsElement.addOption(option, index);
+      }
+    }, {
+      key: "addFilter",
+      value: function addFilter(key, func) {
+        this.optionsElement.addFilter(key, func);
       }
     }, {
       key: "clear",

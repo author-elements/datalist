@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
-// @author.io/element-menu v1.0.14 available at github.com/author-elements/menu
-// Last Build: 4/1/2019, 9:06:47 PM
+// @author.io/element-menu v1.0.18 available at github.com/author-elements/menu
+// Last Build: 4/10/2019, 9:48:39 PM
 var AuthorMenuElement = (function () {
   'use strict';
 
@@ -138,8 +138,15 @@ var AuthorMenuElement = (function () {
       _this = _possibleConstructorReturn(this, _getPrototypeOf(AuthorMenuElement).call(this, templateString || "<template><style>@charset \"UTF-8\"; :host *,:host :after,:host :before{box-sizing:border-box}author-menu *,author-menu :after,author-menu :before{box-sizing:border-box}</style><slot></slot></template>"));
 
       _this.UTIL.defineProperties({
+        sourceForm: {
+          private: true,
+          default: null
+        },
         form: {
-          readonly: true
+          readonly: true,
+          get: function get() {
+            return _this.PRIVATE.sourceForm;
+          }
         },
         hoveredIndex: {
           readonly: true,
@@ -322,8 +329,6 @@ var AuthorMenuElement = (function () {
               name = _evt$detail.name,
               value = _evt$detail.value;
 
-          _this.optionsElement.unHoverAllOptions();
-
           switch (name) {
             case 'multiple':
               value && _this.removeAttribute('open');
@@ -331,6 +336,8 @@ var AuthorMenuElement = (function () {
 
             case 'open':
               if (_this.multiple) {
+                _this.optionsElement.unHoverAllOptions();
+
                 return _this.removeAttribute('open');
               }
 
@@ -417,6 +424,26 @@ var AuthorMenuElement = (function () {
         this.optionsElement.addOption(option, index);
       }
     }, {
+      key: "addFilter",
+      value: function addFilter(key, func) {
+        this.optionsElement.addFilter(key, func);
+      }
+    }, {
+      key: "hasFilter",
+      value: function hasFilter(key) {
+        return this.optionsElement.hasFilter(key);
+      }
+    }, {
+      key: "removeAllFilters",
+      value: function removeAllFilters() {
+        this.optionsElement.removeAllFilters();
+      }
+    }, {
+      key: "removeFilter",
+      value: function removeFilter() {
+        this.optionsElement.removeFilter(key);
+      }
+    }, {
       key: "checkValidity",
       value: function checkValidity() {
         return this.sourceElement.checkValidity();
@@ -434,11 +461,23 @@ var AuthorMenuElement = (function () {
     }, {
       key: "inject",
       value: function inject(sourceElement) {
+        var _this2 = this;
+
         var labels = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
         // Prevent re-injections
         if (this.PRIVATE.injected) {
           return;
+        }
+
+        this.PRIVATE.sourceForm = sourceElement.form;
+
+        if (this.PRIVATE.sourceForm !== null) {
+          this.UTIL.registerListeners(this.PRIVATE.sourceForm, {
+            reset: function reset(evt) {
+              return _this2.deselectAll();
+            }
+          });
         }
 
         this.UTIL.defineProperty('sourceElement', {

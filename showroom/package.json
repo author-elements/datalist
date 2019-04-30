@@ -12,14 +12,14 @@
   "author": "Graham Butler",
   "license": "MIT",
   "devDependencies": {
-    "@chassis/core": "^2.3.3",
+    "@chassis/core": "^2.3.9",
     "productionline-web": "^1.1.8"
   },
   "dependencies": {
-    "@author.io/element-base": "^1.1.1",
-    "@author.io/element-control": "^1.0.11",
+    "@author.io/element-base": "^1.1.3",
+    "@author.io/element-control": "^1.0.15",
     "@author.io/element-cycle": "^1.0.2",
-    "@author.io/element-menu": "^1.0.14",
+    "@author.io/element-menu": "^1.0.18",
     "@author.io/element-optgroup": "^1.0.1",
     "@author.io/element-optgroup-label": "^1.0.1",
     "@author.io/element-option": "^1.0.4",

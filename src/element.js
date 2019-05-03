@@ -144,6 +144,10 @@ class AuthorDatalistElement extends AuthorMenuElement {
     this.optionsElement.addFilter(key, func)
   }
 
+  blur () {
+    this.inputElement.blur()
+  }
+
   clear () {
     this.inputElement.value = ''
     this.selectedIndex = -1

@@ -20,5 +20,7 @@ const Demo = new NGNX.VIEW.Registry({
     })
 
     datalist.focus()
+
+    setTimeout(() => datalist.blur(), 1000)
   }
 })

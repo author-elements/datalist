@@ -18,5 +18,7 @@ const Demo = new NGNX.VIEW.Registry({
     datalist.on('focus', evt => {
       console.log(evt);
     })
+
+    datalist.focus()
   }
 })

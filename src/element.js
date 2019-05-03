@@ -70,8 +70,6 @@ class AuthorDatalistElement extends AuthorMenuElement {
 
             break
         }
-
-        this.PRIVATE.keydownHandler(evt)
       },
 
       showAllOptions: () => Array.from(this.options).forEach(option => option.removeAttribute('hidden'))
